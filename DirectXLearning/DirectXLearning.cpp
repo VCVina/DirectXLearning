@@ -54,11 +54,13 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 	// Use the WND class to Create Window
 	HWND hWnd; // Not just app, window also has a handle, we should store this h.
+	RECT wr = { 0, 0, 500, 400 }; 
+	AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
 	hWnd = CreateWindowEx(NULL, wc.lpszClassName, L"Our First Windowed Program", WS_OVERLAPPEDWINDOW, 
 		300, // x 
 		300, // y 
-		500, // w
-		400, // h
+		wr.right - wr.left, // w
+		wr.bottom - wr.top, // h
 		NULL, 
 		NULL,
 		hInstance, // handle from windows
@@ -71,21 +73,18 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	// Of course we need Main Loop
 	MSG msg;
 
-	while (GetMessage(&msg, NULL, 0, 0)) { //<= I have a wrong
-		TranslateMessage(&msg);
-		DispatchMessage(&msg); //->wc.lpfnWndProc = WindowProc, We need complete this WindowProc
+	while (TRUE) { 
+		// Code for every frame
+		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg); //->wc.lpfnWndProc = WindowProc, We need complete this WindowProc
+
+			// Quit?
+			if (msg.message == WM_QUIT)
+				break;
+		}
 	}
 
 	return msg.wParam;
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
