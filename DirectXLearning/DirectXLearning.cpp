@@ -12,9 +12,11 @@
 // include the Direct3D Library file
 #pragma comment (lib, "d3d11.lib")
 
+// COM
 IDXGISwapChain* swapChain;
 ID3D11Device* dev;
 ID3D11DeviceContext* devContext;
+ID3D11RenderTargetView* backBuffer;
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -63,8 +65,6 @@ void InitD3D(HWND hWnd)
 	scd.SampleDesc.Count = 4;
 	scd.Windowed = TRUE;
 
-
-
 	D3D11CreateDeviceAndSwapChain(
 		NULL,
 		D3D_DRIVER_TYPE_HARDWARE,
@@ -79,6 +79,45 @@ void InitD3D(HWND hWnd)
 		NULL,
 		&devContext
 	);
+
+	SetViewport();
+
+	ID3D11Texture2D* pBackBuffer; // COM need release
+
+	swapChain->GetBuffer(0,__uuidof(ID3D11Texture2D),(LPVOID*)&pBackBuffer);
+
+	dev->CreateRenderTargetView(pBackBuffer, NULL, &backBuffer);
+
+	pBackBuffer->Release();
+
+
+
+	devContext->OMSetRenderTargets(1, &backBuffer, NULL);
+
+}
+
+void SetViewport()
+{
+	D3D11_VIEWPORT viewport;
+	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
+
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = 2000;
+	viewport.Height = 600;
+
+	devContext->RSSetViewports(1, &viewport);
+}
+
+void RenderFrame()
+{
+	float clearColor[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
+
+
+	devContext->ClearRenderTargetView(backBuffer, clearColor);
+
+
+	swapChain->Present(0,0);
 }
 
 void CleanD3D()
@@ -86,6 +125,7 @@ void CleanD3D()
 	swapChain->Release();
 	dev->Release();
 	devContext->Release();
+	backBuffer->Release();
 }
 
 int WINAPI WinMain(HINSTANCE hInstance,
@@ -118,12 +158,11 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 	//// DX
 	InitD3D(hWnd);
-
 	// Of course we need Main Loop
 	MSG msg;
 
 	while (TRUE) { 
-		// Code for every frame
+		RenderFrame();
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
